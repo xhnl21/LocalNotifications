@@ -3,7 +3,9 @@
     <ion-content :fullscreen="true">
 
       <div id="container">
-        <ion-button @click="note">Trigger Haptic Feedback</ion-button>
+        <ion-input type="text" v-model="title" placeholder="Title"></ion-input>
+        <ion-input type="text" v-model="body" placeholder="Msj"></ion-input>
+        <ion-button @click="scheduleNotification">Trigger Haptic Feedback</ion-button>        
       </div>
     </ion-content>
   </ion-page>
@@ -11,48 +13,41 @@
 
 <script>
 import { LocalNotifications } from '@capacitor/local-notifications';
+
 export default {
-    components: { LocalNotifications },
-    data() {
+  data () {
       return {
-        localNotifications: LocalNotifications,
-      };
-    },
-    methods: {
-      async note() {
-        await LocalNotifications.registerActionTypes({
-          types: [
-            {
-              id: 'your_choice',
-              actions: [
-                {
-                  id: 'dismiss',
-                  title: 'Dismiss',
-                  destructive: true
-                },
-                {
-                  id: 'open',
-                  title: 'Open app'
-                },
-                {
-                  id: 'respond',
-                  title: 'Respond',
-                  input: true
-                }
-              ]
-            }
-          ]
-        });
-
-        console.log(this.localNotifications);
-        this.localNotifications.schedule({
-          id: 1,
-          text: 'Single LocalNotification',
-
-          data: { secret: key },
-        });
-      },
-    },
+          logo:import.meta.env.BASE_URL+"favicon.png",
+          sound:import.meta.env.BASE_URL+"sound.mp3",
+          title:"Title",
+          body:"Body",
+      }
+  },
+  methods: {
+    async scheduleNotification() {
+        const result = await LocalNotifications.requestPermissions();
+        if (result.display == "granted") {
+          const notif = await LocalNotifications.schedule({
+            notifications: [
+              {
+                title: this.title,
+                body: this.body,
+                id: 1,
+                schedule: { at: new Date(Date.now() + 1000) },
+                playSound: true, // activa la reproducción de sonido configurado por el teléfono
+                // sound: this.sound, // ruta del archivo de sonido
+                // smallIcon: "res://ic_stat_icon_name", // ruta de la imagen del icono pequeño                
+                smallIcon: this.logo,
+                vibrate: true // activa la vibración en la notificación
+              }
+            ]        
+          });
+          console.log('Notificación programada con éxito', notif);
+        } else {
+          console.log('Permiso para mostrar notificaciones denegado');
+        }
+    }
+  }
 }
 </script>
 
